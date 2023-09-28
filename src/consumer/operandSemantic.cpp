@@ -18,7 +18,7 @@ using namespace std;
 
 namespace {
 
-const static string id = "numberOperand";
+const string id = "numberOperand";
 
 class OperandCallback : public MatchFinder::MatchCallback {
 public:

@@ -58,6 +58,26 @@ public:
   std::string name() const override;
 };
 
+class ForSemiSyntax : public CustomASTConsumer {
+public:
+  explicit ForSemiSyntax(
+      std::vector<std::function<void(clang::Rewriter &)>> &all);
+
+  void HandleTranslationUnit(clang::ASTContext &Context) override;
+
+  std::string name() const override;
+};
+
+class ParenSyntax : public CustomASTConsumer {
+public:
+  explicit ParenSyntax(
+      std::vector<std::function<void(clang::Rewriter &)>> &all);
+
+  void HandleTranslationUnit(clang::ASTContext &Context) override;
+
+  std::string name() const override;
+};
+
 class ASTConsumerFactory {
 public:
   static std::unique_ptr<clang::ASTConsumer>

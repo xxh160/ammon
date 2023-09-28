@@ -11,15 +11,16 @@
 #include <util.h>
 #include <vector>
 
+using namespace llvm;
 using namespace clang;
 using namespace clang::ast_matchers;
 using namespace std;
 
 namespace {
 
-const static string id = "binaryOperator";
+const string id = "binaryOperator";
 
-static vector<vector<string>> binaryOperators = {
+vector<vector<string>> binaryOperators = {
     {"+", "-", "*", "/", "%"},          // Arithmetic
     {"<", "<=", ">", ">=", "==", "!="}, // Comparison
     {"&&", "||"},                       // Logical
@@ -27,7 +28,7 @@ static vector<vector<string>> binaryOperators = {
     {"=", "+=", "-=", "*=", "/=", "%="} // Assignment
 };
 
-static string nxtStr(string &cur) {
+string nxtStr(string &cur) {
   string nxt = cur;
   for (auto &line : binaryOperators) {
     if (find(line.begin(), line.end(), cur) == line.end())
@@ -64,9 +65,10 @@ public:
 
       function<void(Rewriter &)> f = [bo, sm, cur, nxt](Rewriter &r) {
         const SourceLocation &loc = bo->getOperatorLoc();
+        // 设置 rewriter
         r.ReplaceText(loc, cur.size(), nxt);
 
-        llvm::outs() << sm->getPresumedLineNumber(loc) << " "
+        outs() << sm->getPresumedLineNumber(loc) << " "
                      << sm->getPresumedColumnNumber(loc) << " OperatorError "
                      << cur << " " << nxt << "\n";
       };

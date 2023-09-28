@@ -22,4 +22,10 @@ int main() {
   B *b = new C();
   a->foo();
   b->foo();
+
+  A* as[] = {new A(), new B(), new C()};
+
+  for (int i = 0; i < 3; ++i) {
+    as[i]->foo();
+  }
 }

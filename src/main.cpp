@@ -10,6 +10,8 @@
 #include <consumer.h>
 #include <cstdint>
 #include <debug.h>
+#include <exception>
+#include <exp.h>
 #include <functional>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
@@ -22,8 +24,10 @@ using namespace clang::tooling;
 using namespace llvm;
 using namespace std;
 
+namespace {
+
 // 空命令行选项
-static cl::OptionCategory ammonCategory("Ammon options");
+cl::OptionCategory ammonCategory("Ammon options");
 
 // 用于将源程序本身的警告屏蔽掉
 class SilentDiagConsumer : public clang::DiagnosticConsumer {
@@ -39,7 +43,7 @@ private:
   vector<function<void(Rewriter &)>> all;
 
 public:
-  AmmonFrontendAction() : rewriter(), all() {}
+  AmmonFrontendAction() {}
 
   void EndSourceFileAction() override {
     // 处理完文件后, 进行的操作
@@ -47,41 +51,62 @@ public:
     int num = all.size();
 
     if (num == 0) {
-      llvm::outs() << "==== End ====\n";
-      return;
+      // 无效的 ASTConsumer
+      throw InvalidConsumerExp();
     }
 
     // 随机选择一个位置进行改写
     int rand = randomNumber(0, num);
     all[rand](rewriter);
-    rewriter.getEditBuffer(mainFileId).write(llvm::outs());
 
-    llvm::outs() << "==== End ====\n";
+    // 将整个修改后的文件写入 llvm 输出
+    rewriter.getEditBuffer(mainFileId).write(outs());
   }
 
   unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &ci,
                                             StringRef file) override {
-    llvm::outs() << "==== Start " << file.str() << " ====\n";
-
     // 静默源程序处理输出
     ci.getDiagnostics().setClient(new SilentDiagConsumer(), true);
 
-    // 为每个文件随机创建一个 ASTConsumer
     rewriter.setSourceMgr(ci.getSourceManager(), ci.getLangOpts());
+
+    // 为每个文件随机创建一个 ASTConsumer
     return ASTConsumerFactory::randomASTConsumer(all);
   }
 };
 
+} // namespace
+
 int main(int argc, const char **argv) {
   // 命令行选项
-  llvm::Expected<CommonOptionsParser> expectedParser =
+  Expected<CommonOptionsParser> expectedParser =
       CommonOptionsParser::create(argc, argv, ammonCategory);
   if (!expectedParser) {
     return 1;
   }
 
   CommonOptionsParser &op = expectedParser.get();
+  // 目前只考虑处理一个文件
   ClangTool Tool(op.getCompilations(), op.getSourcePathList());
 
-  return Tool.run(newFrontendActionFactory<AmmonFrontendAction>().get());
+  outs() << "==== Start " << op.getSourcePathList()[0] << " ====\n";
+
+  while (true) {
+    // 如果这次选择的 consumer 无效, 则多次选择
+    try {
+      Tool.run(newFrontendActionFactory<AmmonFrontendAction>().get());
+    } catch (const InvalidConsumerExp &e) {
+      continue; // 继续循环就行了
+    } catch (const exception &e) {
+      errs() << e.what() << "\n";
+    } catch (...) {
+      errs() << "Something Unknown Happened\n";
+    }
+
+    break;
+  }
+
+  outs() << "==== End ====\n";
+
+  return 0;
 }

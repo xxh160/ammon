@@ -15,10 +15,11 @@
 using namespace clang;
 using namespace clang::ast_matchers;
 using namespace std;
+using namespace llvm;
 
 namespace {
 
-const static string id = "numberVariable";
+const string id = "numberVariable";
 
 class VariableCallback : public MatchFinder::MatchCallback {
 public:
@@ -30,14 +31,18 @@ public:
   void run(const MatchFinder::MatchResult &result) override {
     const auto *bo = result.Nodes.getNodeAs<DeclRefExpr>(id);
     const SourceManager *sm = result.SourceManager;
-    if (bo) {
+
+    if (bo && sm) {
       function<void(Rewriter &)> f = [bo, sm](Rewriter &r) {
+        // 注意 getEndLoc 可能返回代表范围结束的令牌的开始位置
         SourceLocation loc = bo->getEndLoc();
+        // 返回紧随给定令牌之后的第一个字符的位置
         loc = Lexer::getLocForEndOfToken(loc, 0, *sm, r.getLangOpts());
+
         r.InsertTextAfter(loc, " + 10086");
 
-        llvm::outs() << sm->getPresumedLineNumber(loc) << " "
-                     << sm->getPresumedColumnNumber(loc) << " VariableError\n";
+        outs() << sm->getPresumedLineNumber(loc) << " "
+               << sm->getPresumedColumnNumber(loc) << " VariableError\n";
       };
 
       all.push_back(f);
@@ -64,6 +69,4 @@ void VariableSemantic::HandleTranslationUnit(clang::ASTContext &context) {
   finder.matchAST(context);
 }
 
-string VariableSemantic::name() const {
-  return "VariableSemantic";
-}
+string VariableSemantic::name() const { return "VariableSemantic"; }

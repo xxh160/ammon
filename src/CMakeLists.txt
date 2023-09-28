@@ -5,6 +5,10 @@ target_sources(ammon PRIVATE
   ./consumer/variableSemantic.cpp
   ./consumer/operandSemantic.cpp
   ./consumer/undefVarSyntax.cpp
+  ./consumer/forSemiSyntax.cpp
+  ./consumer/parenSyntax.cpp
+  ./exp/invalidConsumerExp.cpp
+  ./exp/noMoreConsumerExp.cpp
   ./util/rand.cpp
   ./main.cpp
 )
