@@ -85,13 +85,13 @@ public:
 } // namespace
 
 ParenSyntax::ParenSyntax(vector<function<void(Rewriter &)>> &all) {
-  callback = unique_ptr<MatchFinder::MatchCallback>(new ParenCallback(all));
+  this->callbacks.push_back(unique_ptr<MatchFinder::MatchCallback>(new ParenCallback(all)));
 
   // 所有括号表达式, 函数声明的括号
   StatementMatcher m = anyOf(callExpr(isExpansionInMainFile()).bind(id),
                              parenExpr(isExpansionInMainFile()).bind(id));
 
-  finder.addMatcher(m, callback.get());
+  finder.addMatcher(m, this->callbacks[0].get());
 }
 
 void ParenSyntax::HandleTranslationUnit(clang::ASTContext &context) {

@@ -12,7 +12,8 @@
 class CustomASTConsumer : public clang::ASTConsumer {
 protected:
   clang::ast_matchers::MatchFinder finder;
-  std::unique_ptr<clang::ast_matchers::MatchFinder::MatchCallback> callback;
+  std::vector<std::unique_ptr<clang::ast_matchers::MatchFinder::MatchCallback>>
+      callbacks;
 
 public:
   virtual std::string name() const = 0;

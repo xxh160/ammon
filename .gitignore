@@ -3,3 +3,5 @@
 .vscode
 build
 compile_commands.json
+*.out
+*.o

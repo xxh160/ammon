@@ -33,19 +33,19 @@ public:
 } // namespace
 
 OperandSemantic::OperandSemantic(vector<function<void(Rewriter &)>> &all) {
-  callback = unique_ptr<MatchFinder::MatchCallback>(new OperandCallback(all));
+  this->callbacks.push_back(
+      unique_ptr<MatchFinder::MatchCallback>(new OperandCallback(all)));
 
   // 所有变量使用
   StatementMatcher m =
       declRefExpr(isExpansionInMainFile(), to(varDecl(hasType(isInteger()))))
           .bind(id);
-  finder.addMatcher(m, callback.get());
+
+  finder.addMatcher(m, this->callbacks[0].get());
 }
 
 void OperandSemantic::HandleTranslationUnit(clang::ASTContext &context) {
   finder.matchAST(context);
 }
 
-string OperandSemantic::name() const {
-  return "OperandSemantic";
-}
+string OperandSemantic::name() const { return "OperandSemantic"; }

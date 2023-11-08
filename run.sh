@@ -34,10 +34,14 @@ while getopts ":ad" opt; do
   esac
 done
 
+export CC=/usr/bin/clang
+export CXX=/usr/bin/clang++
+
 # build
-cmake -S . -B "$BUILD" -DCMAKE_BUILD_TYPE=Debug -DAMMON_DEBUG:STRING="$AMMON_DEBUG" ||
+# -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B "$BUILD" -DAMMON_DEBUG:STRING="$AMMON_DEBUG" ||
   quit "Configure Stage"
-bear -- cmake --build "$BUILD" -- -j "$(nproc)" || quit "Build Stage"
+bear --append -- cmake --build "$BUILD" -- -j "$(nproc)" || quit "Build Stage"
 
 # run
 "$BUILD"/ammon "$TARGET_SOURCE" -- -I/usr/lib/gcc/x86_64-pc-linux-gnu/"$(gcc -dumpversion)"/include/

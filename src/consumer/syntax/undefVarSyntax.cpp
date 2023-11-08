@@ -47,8 +47,8 @@ public:
         SourceLocation loc = bo->getBeginLoc();
 
         outs() << sm->getPresumedLineNumber(loc) << " "
-               << sm->getPresumedColumnNumber(loc) << " UndefinedVariableError " << oldn
-               << " " << newn << "\n";
+               << sm->getPresumedColumnNumber(loc) << " UndefinedVariableError "
+               << oldn << " " << newn << "\n";
       };
 
       all.push_back(f);
@@ -59,12 +59,14 @@ public:
 } // namespace
 
 UndefVarSyntax::UndefVarSyntax(vector<function<void(Rewriter &)>> &all) {
-  callback = unique_ptr<MatchFinder::MatchCallback>(new UndefVarCallback(all));
+  this->callbacks.push_back(
+      unique_ptr<MatchFinder::MatchCallback>(new UndefVarCallback(all)));
 
   // 所有有声明的变量使用
   StatementMatcher m =
       declRefExpr(isExpansionInMainFile(), hasDeclaration(varDecl())).bind(id);
-  finder.addMatcher(m, callback.get());
+
+  finder.addMatcher(m, this->callbacks[0].get());
 }
 
 void UndefVarSyntax::HandleTranslationUnit(clang::ASTContext &context) {

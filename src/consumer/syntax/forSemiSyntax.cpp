@@ -63,12 +63,12 @@ public:
 } // namespace
 
 ForSemiSyntax::ForSemiSyntax(vector<function<void(Rewriter &)>> &all) {
-  callback = unique_ptr<MatchFinder::MatchCallback>(new ForSemiCallback(all));
+  this->callbacks.push_back(unique_ptr<MatchFinder::MatchCallback>(new ForSemiCallback(all)));
 
   // 所有 for 语句
   StatementMatcher m = forStmt(isExpansionInMainFile()).bind(id);
 
-  finder.addMatcher(m, callback.get());
+  finder.addMatcher(m, this->callbacks[0].get());
 }
 
 void ForSemiSyntax::HandleTranslationUnit(clang::ASTContext &context) {

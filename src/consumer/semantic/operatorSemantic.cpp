@@ -69,8 +69,8 @@ public:
         r.ReplaceText(loc, cur.size(), nxt);
 
         outs() << sm->getPresumedLineNumber(loc) << " "
-                     << sm->getPresumedColumnNumber(loc) << " OperatorError "
-                     << cur << " " << nxt << "\n";
+               << sm->getPresumedColumnNumber(loc) << " OperatorError " << cur
+               << " " << nxt << "\n";
       };
 
       all.push_back(f);
@@ -81,17 +81,16 @@ public:
 } // namespace
 
 OperatorSemantic::OperatorSemantic(vector<function<void(Rewriter &)>> &all) {
-  callback = unique_ptr<MatchFinder::MatchCallback>(new OperatorCallback(all));
+  this->callbacks.push_back(
+      unique_ptr<MatchFinder::MatchCallback>(new OperatorCallback(all)));
 
   // 寻找所有的二元操作符
   finder.addMatcher(binaryOperator(isExpansionInMainFile()).bind(id),
-                    callback.get());
+                    this->callbacks[0].get());
 }
 
 void OperatorSemantic::HandleTranslationUnit(clang::ASTContext &context) {
   finder.matchAST(context);
 }
 
-string OperatorSemantic::name() const {
-  return "OperatorSemantic";
-}
+string OperatorSemantic::name() const { return "OperatorSemantic"; }

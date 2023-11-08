@@ -26,9 +26,6 @@ using namespace std;
 
 namespace {
 
-// 空命令行选项
-cl::OptionCategory ammonCategory("Ammon options");
-
 // 用于将源程序本身的警告屏蔽掉
 class SilentDiagConsumer : public clang::DiagnosticConsumer {
 public:
@@ -43,7 +40,7 @@ private:
   vector<function<void(Rewriter &)>> all;
 
 public:
-  AmmonFrontendAction() {}
+  AmmonFrontendAction() = default;
 
   void EndSourceFileAction() override {
     // 处理完文件后, 进行的操作
@@ -78,7 +75,8 @@ public:
 } // namespace
 
 int main(int argc, const char **argv) {
-  // 命令行选项
+  // 空命令行选项
+  cl::OptionCategory ammonCategory("Ammon options");
   Expected<CommonOptionsParser> expectedParser =
       CommonOptionsParser::create(argc, argv, ammonCategory);
   if (!expectedParser) {

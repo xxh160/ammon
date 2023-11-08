@@ -3,7 +3,7 @@
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <consumer.h>
 #include <debug.h>
-#include <llvm/Support/raw_ostream.h>
+// #include <llvm/Support/raw_ostream.h>
 #include <unordered_set>
 #include <util.h>
 
@@ -13,9 +13,11 @@ using namespace std;
 namespace {
 
 enum {
+  // 语义错误
   OPERATOR_SEMANTIC = 0,
   VARIABLE_SEMANTIC,
   OPERAND_SEMANTIC,
+  // 语法错误
   UNDEFVAR_SYNTAX,
   FORSEMI_SYNTAX,
   PAREN_SYNTAX,
@@ -28,19 +30,23 @@ unordered_set<int> blacklist;
 
 unique_ptr<ASTConsumer>
 ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
+  int begin = 0;
+  int end = 2;
+  if (begin > end) ERROR("Random Consumer Error");
+
   // 没有可用的了
-  if (blacklist.size() == CONSUMER_COUNT) {
+  if (blacklist.size() >= (size_t)(end - begin)) {
     throw NoMoreConsumerExp();
   }
 
 #ifdef AMMON_DEBUG
-  int index = PAREN_SYNTAX;
+  int index = VARIABLE_SEMANTIC;
 #else
-  int index = randomNumber(3, CONSUMER_COUNT);
+  int index = randomNumber(begin, end);
 #endif
 
   while (blacklist.find(index) != blacklist.end()) {
-    index = randomNumber(3, CONSUMER_COUNT);
+    index = randomNumber(begin, end);
   }
   blacklist.insert(index);
 

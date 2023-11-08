@@ -27,15 +27,21 @@ endif()
 find_package(LLVM REQUIRED CONFIG
   HINTS "../llvm-project/build-release-static/lib/cmake/llvm"
 )
-message(STATUS "Found LLVM: ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVM: ${LLVM_CMAKE_DIR}")
 find_package(Clang REQUIRED CONFIG
   HINTS "../llvm-project/build-release-static/lib/cmake/clang"
 )
 
+message(STATUS "Found LLVM: ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Found LLVM libraries in: ${LLVM_LIBRARY_DIRS}")
+message(STATUS "Found LLVMConfig.cmake in: ${LLVM_CMAKE_DIR}")
+
+
 # 设置包含路径
 include_directories(SYSTEM "${LLVM_INCLUDE_DIRS};${CLANG_INCLUDE_DIRS}")
 include_directories(./include)
+
+# 添加定义
+add_definitions(${LLVM_DEFINITIONS})
 
 # 可执行文件
 add_executable(ammon)
@@ -45,6 +51,6 @@ add_subdirectory(src)
 
 # 链接库
 target_link_libraries(ammon PRIVATE
+  LLVM
   clang-cpp
-  # clangAST
 )
