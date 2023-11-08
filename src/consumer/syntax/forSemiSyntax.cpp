@@ -24,6 +24,9 @@ using namespace llvm;
 
 namespace {
 
+const string desc =
+    "This bug is a syntax error where a comma is mistakenly used instead "
+    "of a semicolon within a for loop";
 const string id = "for";
 
 class ForSemiCallback : public MatchFinder::MatchCallback {
@@ -36,23 +39,30 @@ public:
   void run(const MatchFinder::MatchResult &result) override {
     const ForStmt *bo = result.Nodes.getNodeAs<ForStmt>(id);
     SourceManager *sm = result.SourceManager;
+    if (bo == nullptr) return;
 
-    if (bo && sm) {
-      function<void(Rewriter &)> f = [bo, sm](Rewriter &r) {
-        // 获取初始子句的结束位置，这是第一个分号的位置
-        SourceLocation loc = bo->getInit()->getEndLoc();
+    // 获取初始子句的结束位置，这是第一个分号的位置
+    const Stmt *init = bo->getInit();
+    // 获取条件语句的结束位置, 这是第二个分号的位置
+    const Stmt *cond = bo->getCond();
+
+    if ((init || cond)&&sm) {
+      function<void(Rewriter &)> f = [init, cond, sm](Rewriter &r) {
+        SourceLocation loc;
 
         int i = randomNumber(0, 2);
-        if (i == 0) {
-          // 获取条件语句的结束位置, 这是第二个分号的位置
-          loc = bo->getCond()->getEndLoc();
-        }
+
+        if (init != nullptr)
+          loc = init->getEndLoc();
+        if (i == 0 && cond != nullptr)
+          loc = cond->getEndLoc();
 
         // 使用Rewriter替换分号为逗号
         r.ReplaceText(loc, 1, ",");
 
         outs() << sm->getPresumedLineNumber(loc) << " "
-               << sm->getPresumedColumnNumber(loc) << " ForStatementSemicolonError ; ,\n";
+               << sm->getPresumedColumnNumber(loc) << "\n"
+               << desc << "\n";
       };
 
       all.push_back(f);
@@ -63,7 +73,8 @@ public:
 } // namespace
 
 ForSemiSyntax::ForSemiSyntax(vector<function<void(Rewriter &)>> &all) {
-  this->callbacks.push_back(unique_ptr<MatchFinder::MatchCallback>(new ForSemiCallback(all)));
+  this->callbacks.push_back(
+      unique_ptr<MatchFinder::MatchCallback>(new ForSemiCallback(all)));
 
   // 所有 for 语句
   StatementMatcher m = forStmt(isExpansionInMainFile()).bind(id);

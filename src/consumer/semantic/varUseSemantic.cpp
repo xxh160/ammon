@@ -18,13 +18,16 @@ using namespace std;
 
 namespace {
 
+const string desc =
+    "This bug is a semantic error where the variable <b> is mistakenly used in "
+    "place of the intended variable <a> of the same type";
 const string id = "numberOperand";
 
-class OperandCallback : public MatchFinder::MatchCallback {
+class VarUseCallback : public MatchFinder::MatchCallback {
 public:
   vector<function<void(Rewriter &)>> &all;
 
-  explicit OperandCallback(vector<function<void(Rewriter &)>> &all)
+  explicit VarUseCallback(vector<function<void(Rewriter &)>> &all)
       : all(all) {}
 
   void run(const MatchFinder::MatchResult &result) override {}
@@ -32,9 +35,9 @@ public:
 
 } // namespace
 
-OperandSemantic::OperandSemantic(vector<function<void(Rewriter &)>> &all) {
+VarUseSemantic::VarUseSemantic(vector<function<void(Rewriter &)>> &all) {
   this->callbacks.push_back(
-      unique_ptr<MatchFinder::MatchCallback>(new OperandCallback(all)));
+      unique_ptr<MatchFinder::MatchCallback>(new VarUseCallback(all)));
 
   // 所有变量使用
   StatementMatcher m =
@@ -44,8 +47,8 @@ OperandSemantic::OperandSemantic(vector<function<void(Rewriter &)>> &all) {
   finder.addMatcher(m, this->callbacks[0].get());
 }
 
-void OperandSemantic::HandleTranslationUnit(clang::ASTContext &context) {
+void VarUseSemantic::HandleTranslationUnit(clang::ASTContext &context) {
   finder.matchAST(context);
 }
 
-string OperandSemantic::name() const { return "OperandSemantic"; }
+string VarUseSemantic::name() const { return "OperandSemantic"; }

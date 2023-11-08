@@ -18,6 +18,8 @@ using namespace std;
 
 namespace {
 
+const string desc = "This bug is a semantic error caused by the use of an "
+                    "incorrect operator in an expression";
 const string id = "binaryOperator";
 
 vector<vector<string>> binaryOperators = {
@@ -69,8 +71,9 @@ public:
         r.ReplaceText(loc, cur.size(), nxt);
 
         outs() << sm->getPresumedLineNumber(loc) << " "
-               << sm->getPresumedColumnNumber(loc) << " OperatorError " << cur
-               << " " << nxt << "\n";
+               << sm->getPresumedColumnNumber(loc) << " " << cur << " " << nxt
+               << "\n"
+               << desc << "\n";
       };
 
       all.push_back(f);

@@ -29,9 +29,9 @@ public:
   std::string name() const override;
 };
 
-class VariableSemantic : public CustomASTConsumer {
+class BoundSemantic : public CustomASTConsumer {
 public:
-  explicit VariableSemantic(
+  explicit BoundSemantic(
       std::vector<std::function<void(clang::Rewriter &)>> &all);
 
   void HandleTranslationUnit(clang::ASTContext &Context) override;
@@ -39,9 +39,9 @@ public:
   std::string name() const override;
 };
 
-class OperandSemantic : public CustomASTConsumer {
+class VarUseSemantic : public CustomASTConsumer {
 public:
-  explicit OperandSemantic(
+  explicit VarUseSemantic(
       std::vector<std::function<void(clang::Rewriter &)>> &all);
 
   void HandleTranslationUnit(clang::ASTContext &Context) override;

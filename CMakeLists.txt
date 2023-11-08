@@ -25,10 +25,10 @@ endif()
 
 # 引入 llvm clang 依赖
 find_package(LLVM REQUIRED CONFIG
-  HINTS "../llvm-project/build-release-static/lib/cmake/llvm"
+#  HINTS "../llvm-project/build-release-static/lib/cmake/llvm"
 )
 find_package(Clang REQUIRED CONFIG
-  HINTS "../llvm-project/build-release-static/lib/cmake/clang"
+#  HINTS "../llvm-project/build-release-static/lib/cmake/clang"
 )
 
 message(STATUS "Found LLVM: ${LLVM_PACKAGE_VERSION}")

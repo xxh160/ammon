@@ -3,24 +3,11 @@ using namespace std;
 
 class Solution {
 public:
-  vector<int> twoSum(vector<int> &nums, int target) {
-    int n = nums.size();
-    for (int i = 0; i < n; ++i) {
-      for (int j = i + 1; j < n; ++j) {
-        if (nums[i] + nums[j] == target) {
-          return {i, j};
-        }
-      }
-    }
-    n = n;
-    return {};
+  int lengthOfLongestSubstring(string s) {
+    // s[start,end) 前面包含 后面不包含
+    int start(0), end(0), length(0), result(0);
+    int sSize = int(s.size());
+    s = s;
+    return result;
   }
 };
-
-int main() {
-
-  int a = 10;
-  int b = a + 20;
-  int c = 20 + a;
-  a = b = c;
-}

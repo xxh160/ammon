@@ -15,8 +15,8 @@ namespace {
 enum {
   // 语义错误
   OPERATOR_SEMANTIC = 0,
-  VARIABLE_SEMANTIC,
-  OPERAND_SEMANTIC,
+  BOUND_SEMANTIC,
+  VARUSE_SEMANTIC,
   // 语法错误
   UNDEFVAR_SYNTAX,
   FORSEMI_SYNTAX,
@@ -30,8 +30,8 @@ unordered_set<int> blacklist;
 
 unique_ptr<ASTConsumer>
 ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
-  int begin = 0;
-  int end = 2;
+  int begin = 3;
+  int end = 6;
   if (begin > end) ERROR("Random Consumer Error");
 
   // 没有可用的了
@@ -39,11 +39,7 @@ ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
     throw NoMoreConsumerExp();
   }
 
-#ifdef AMMON_DEBUG
-  int index = VARIABLE_SEMANTIC;
-#else
   int index = randomNumber(begin, end);
-#endif
 
   while (blacklist.find(index) != blacklist.end()) {
     index = randomNumber(begin, end);
@@ -56,11 +52,11 @@ ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
   case OPERATOR_SEMANTIC:
     res = new OperatorSemantic(all);
     break;
-  case VARIABLE_SEMANTIC:
-    res = new VariableSemantic(all);
+  case BOUND_SEMANTIC:
+    res = new BoundSemantic(all);
     break;
-  case OPERAND_SEMANTIC:
-    res = new OperandSemantic(all);
+  case VARUSE_SEMANTIC:
+    res = new VarUseSemantic(all);
     break;
   case UNDEFVAR_SYNTAX:
     res = new UndefVarSyntax(all);

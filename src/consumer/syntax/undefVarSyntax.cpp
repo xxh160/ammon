@@ -23,6 +23,9 @@ using namespace llvm;
 
 namespace {
 
+const string desc =
+    "This bug is a syntax error involving the use of an undefined variable, "
+    "likely due to a typographical error in the variable name.";
 const string id = "varUse";
 
 class UndefVarCallback : public MatchFinder::MatchCallback {
@@ -47,8 +50,9 @@ public:
         SourceLocation loc = bo->getBeginLoc();
 
         outs() << sm->getPresumedLineNumber(loc) << " "
-               << sm->getPresumedColumnNumber(loc) << " UndefinedVariableError "
-               << oldn << " " << newn << "\n";
+               << sm->getPresumedColumnNumber(loc) << " " << oldn << " " << newn
+               << "\n"
+               << desc << "\n";
       };
 
       all.push_back(f);

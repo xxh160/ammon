@@ -23,6 +23,8 @@ using namespace llvm;
 
 namespace {
 
+const string desc =
+    "This bug is a syntax error caused by incomplete brackets in the code";
 const string id = "parentheses";
 
 class ParenCallback : public MatchFinder::MatchCallback {
@@ -73,8 +75,8 @@ public:
         r.RemoveText(loc, 1);
 
         outs() << sm->getPresumedLineNumber(loc) << " "
-               << sm->getPresumedColumnNumber(loc)
-               << " InvalidParenthesesError " << c << "\n";
+               << sm->getPresumedColumnNumber(loc) << " " << c << "\n"
+               << desc << "\n";
       };
 
       all.push_back(f);
@@ -85,7 +87,8 @@ public:
 } // namespace
 
 ParenSyntax::ParenSyntax(vector<function<void(Rewriter &)>> &all) {
-  this->callbacks.push_back(unique_ptr<MatchFinder::MatchCallback>(new ParenCallback(all)));
+  this->callbacks.push_back(
+      unique_ptr<MatchFinder::MatchCallback>(new ParenCallback(all)));
 
   // 所有括号表达式, 函数声明的括号
   StatementMatcher m = anyOf(callExpr(isExpansionInMainFile()).bind(id),
