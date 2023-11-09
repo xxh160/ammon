@@ -5,6 +5,7 @@
 * [ ] 语义错误 `boundSemantic.cpp` **偶尔**会莫名其妙修改 `string` 等, 而且手动完全无法复现, 可能要在连续多次执行才可能触发
 * [ ] 语义错误 `varUseSemantic.cpp` 尚未完成
 * [ ] Leetcode 有自己预定义的数据结构, 这些都没定义 
+* [ ] 语义错误 `operatorSemantic.cpp` 替换的操作符可能会出错, 主要问题出在操作符重载那里
 
 ## 语法错误
 

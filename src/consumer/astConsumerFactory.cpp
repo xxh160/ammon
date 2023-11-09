@@ -30,8 +30,8 @@ unordered_set<int> blacklist;
 
 unique_ptr<ASTConsumer>
 ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
-  int begin = 3;
-  int end = 6;
+  int begin = 0;
+  int end = 2;
   if (begin > end) ERROR("Random Consumer Error");
 
   // 没有可用的了

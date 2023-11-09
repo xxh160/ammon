@@ -22,6 +22,7 @@ const string desc = "This bug is a semantic error caused by the use of an "
                     "incorrect operator in an expression";
 const string id = "binaryOperator";
 
+// 这个是有可能出错的, 只能手动避免
 vector<vector<string>> binaryOperators = {
     {"+", "-", "*", "/", "%"},          // Arithmetic
     {"<", "<=", ">", ">=", "==", "!="}, // Comparison
