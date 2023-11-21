@@ -5,24 +5,28 @@ quit() {
   exit 1
 }
 
+export CC=/usr/bin/clang
+export CXX=/usr/bin/clang++
+
 # 文件位置
 PROJECT=ammon
 WORK_DIR=$(pwd)
-BUILD=$WORK_DIR/build
 
 if [[ "$WORK_DIR" != */${PROJECT} ]]; then
   echo "Should be executed in ${PROJECT}"
   exit 1
 fi
 
+BUILD=$WORK_DIR/build
+EXE=$BUILD/ammon
 # 目标文件
 TARGET_SOURCE="$1"
 shift
-
 AMMON_DEBUG=off
+TYPE_OPTION=-1
 
 # -d -a
-while getopts ":ad" opt; do
+while getopts ":adt:" opt; do
   case ${opt} in
     a)
       rm "$BUILD" -rf
@@ -30,18 +34,17 @@ while getopts ":ad" opt; do
     d)
       AMMON_DEBUG=on
       ;;
+    t)
+      TYPE_OPTION="$OPTARG"
+      ;;
     *) ;;
   esac
 done
 
-export CC=/usr/bin/clang
-export CXX=/usr/bin/clang++
-
 # build
-# -DCMAKE_BUILD_TYPE=Debug
-cmake -S . -B "$BUILD" -DAMMON_DEBUG:STRING="$AMMON_DEBUG" ||
+cmake -S . -B "$BUILD" -G Ninja -DAMMON_DEBUG:STRING="$AMMON_DEBUG" ||
   quit "Configure Stage"
 bear --append -- cmake --build "$BUILD" -- -j "$(nproc)" || quit "Build Stage"
 
 # run
-"$BUILD"/ammon "$TARGET_SOURCE" -- -I/usr/lib/gcc/x86_64-pc-linux-gnu/"$(gcc -dumpversion)"/include/
+"$EXE" "$TARGET_SOURCE" -t "$TYPE_OPTION" --

@@ -12,43 +12,11 @@ using namespace std;
 
 namespace {
 
-enum {
-  // 语义错误
-  OPERATOR_SEMANTIC = 0,
-  BOUND_SEMANTIC,
-  VARUSE_SEMANTIC,
-  // 语法错误
-  UNDEFVAR_SYNTAX,
-  FORSEMI_SYNTAX,
-  PAREN_SYNTAX,
-  CONSUMER_COUNT
-};
-
-unordered_set<int> blacklist;
-
-} // namespace
-
 unique_ptr<ASTConsumer>
-ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
-  int begin = 0;
-  int end = 2;
-  if (begin > end) ERROR("Random Consumer Error");
-
-  // 没有可用的了
-  if (blacklist.size() >= (size_t)(end - begin)) {
-    throw NoMoreConsumerExp();
-  }
-
-  int index = randomNumber(begin, end);
-
-  while (blacklist.find(index) != blacklist.end()) {
-    index = randomNumber(begin, end);
-  }
-  blacklist.insert(index);
-
+constructConsumer(vector<function<void(Rewriter &)>> &all, int type) {
   CustomASTConsumer *res = nullptr;
 
-  switch (index) {
+  switch (type) {
   case OPERATOR_SEMANTIC:
     res = new OperatorSemantic(all);
     break;
@@ -69,7 +37,7 @@ ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
     break;
 
   default:
-    // 到不了这里
+    ERROR("Consumer Construction Error");
     break;
   }
 
@@ -79,3 +47,42 @@ ASTConsumerFactory::randomASTConsumer(vector<function<void(Rewriter &)>> &all) {
 
   return unique_ptr<ASTConsumer>(res);
 }
+
+unordered_set<int> blacklist;
+
+} // namespace
+
+// 如果不指定就 random 一个 ASTConsumer
+unique_ptr<ASTConsumer>
+ASTConsumerFactory::getASTConsumer(vector<function<void(Rewriter &)>> &all,
+                                   int type) {
+  // 有效的 type 输入
+  if (isValidType(type)) {
+    return constructConsumer(all, type);
+  }
+
+  // 自己 random 一个 ASTConsumer, 并且之后不 random 重复的
+  int begin = OPERATOR_SEMANTIC;
+  int end = BOUND_SEMANTIC + 1;
+
+  if (begin > end)
+    ERROR("Consumer Construction Error");
+
+  // 没有可用的了
+  if (blacklist.size() >= (size_t)(end - begin)) {
+    throw NoMoreConsumerExp();
+  }
+
+  while (true) {
+    type = randomNumber(begin, end);
+    // 在 blacklist 中
+    if (blacklist.find(type) != blacklist.end())
+      continue;
+
+    blacklist.insert(type);
+    break;
+  }
+
+  return constructConsumer(all, type);
+}
+

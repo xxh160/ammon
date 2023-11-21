@@ -37,13 +37,15 @@ public:
 class AmmonFrontendAction : public ASTFrontendAction {
 private:
   Rewriter rewriter;
+  // 这是不知道 rewriter 里边有 editBuffer 迭代器之前的设计...
   vector<function<void(Rewriter &)>> all;
+  int typeOption;
 
 public:
-  AmmonFrontendAction() = default;
+  AmmonFrontendAction(int t) : typeOption(t) {}
 
+  // 处理完文件后, 进行的操作
   void EndSourceFileAction() override {
-    // 处理完文件后, 进行的操作
     auto mainFileId = rewriter.getSourceMgr().getMainFileID();
     int num = all.size();
 
@@ -54,6 +56,7 @@ public:
 
     // 随机选择一个位置进行改写
     int rand = randomNumber(0, num);
+    // 在这里将修改存储在 rewriter 缓冲区中
     all[rand](rewriter);
 
     // 将整个修改后的文件写入 llvm 输出
@@ -67,16 +70,75 @@ public:
 
     rewriter.setSourceMgr(ci.getSourceManager(), ci.getLangOpts());
 
-    // 为每个文件随机创建一个 ASTConsumer
-    return ASTConsumerFactory::randomASTConsumer(all);
+    // 为每个文件创建一个 ASTConsumer
+    return ASTConsumerFactory::getASTConsumer(all, typeOption);
   }
 };
+
+class AmmonFrontendActionFactory : public FrontendActionFactory {
+private:
+  int typeOption;
+
+public:
+  AmmonFrontendActionFactory(int t) : typeOption(t) {}
+
+  unique_ptr<FrontendAction> create() override {
+    return make_unique<AmmonFrontendAction>(typeOption);
+  }
+};
+
+unique_ptr<FrontendActionFactory> newAmmon(int t) {
+  return make_unique<AmmonFrontendActionFactory>(t);
+}
+
+}; // namespace
+
+namespace {
+
+// 命令行选项
+cl::OptionCategory ammonCategory("Ammon options");
+
+// -t <type>
+// magic number?
+int typeOptionInit = ALL_CONSUMER;
+cl::opt<int> typeOption("t", cl::desc("Specify mutation type"),
+                        cl::value_desc("type"), cl::Optional,
+                        cl::init(typeOptionInit), cl::cat(ammonCategory));
+
+void runTool(ClangTool &tool) {
+  // 预留处理其它参数的空间
+  if (ASTConsumerFactory::isValidType(typeOption)) {
+    try {
+      tool.run(newAmmon(typeOption).get());
+    } catch (const InvalidConsumerExp &e) {
+    } catch (...) {
+      ERROR("Something Unknown Happened");
+    }
+
+    return;
+  }
+
+  // 默认是循环尝试所有 ASTConsumer, 直到有一个可以用
+  while (true) {
+    // 如果这次选择的 consumer 无效, 则多次选择
+    try {
+      tool.run(newAmmon(typeOption).get());
+    } catch (const InvalidConsumerExp &e) {
+      continue; // 继续循环就行了
+    } catch (const exception &e) {
+      ERROR(e.what());
+    } catch (...) {
+      ERROR("Something Unknown Happened");
+    }
+
+    break;
+  }
+}
 
 } // namespace
 
 int main(int argc, const char **argv) {
-  // 空命令行选项
-  cl::OptionCategory ammonCategory("Ammon options");
+  cl::HideUnrelatedOptions(ammonCategory);
   Expected<CommonOptionsParser> expectedParser =
       CommonOptionsParser::create(argc, argv, ammonCategory);
   if (!expectedParser) {
@@ -84,25 +146,12 @@ int main(int argc, const char **argv) {
   }
 
   CommonOptionsParser &op = expectedParser.get();
-  // 目前只考虑处理一个文件
-  ClangTool Tool(op.getCompilations(), op.getSourcePathList());
+  // 只考虑处理一个文件
+  ClangTool tool(op.getCompilations(), op.getSourcePathList());
 
   outs() << "==== Start " << op.getSourcePathList()[0] << " ====\n";
 
-  while (true) {
-    // 如果这次选择的 consumer 无效, 则多次选择
-    try {
-      Tool.run(newFrontendActionFactory<AmmonFrontendAction>().get());
-    } catch (const InvalidConsumerExp &e) {
-      continue; // 继续循环就行了
-    } catch (const exception &e) {
-      errs() << e.what() << "\n";
-    } catch (...) {
-      errs() << "Something Unknown Happened\n";
-    }
-
-    break;
-  }
+  runTool(tool);
 
   outs() << "==== End ====\n";
 

@@ -79,10 +79,27 @@ public:
   std::string name() const override;
 };
 
+enum {
+  // 语义错误
+  OPERATOR_SEMANTIC = 0,
+  BOUND_SEMANTIC,
+  VARUSE_SEMANTIC,
+  // 语法错误
+  UNDEFVAR_SYNTAX,
+  FORSEMI_SYNTAX,
+  PAREN_SYNTAX,
+  ALL_CONSUMER
+};
+
 class ASTConsumerFactory {
 public:
   static std::unique_ptr<clang::ASTConsumer>
-  randomASTConsumer(std::vector<std::function<void(clang::Rewriter &)>> &all);
+  getASTConsumer(std::vector<std::function<void(clang::Rewriter &)>> &all,
+                 int type = ALL_CONSUMER);
+
+  static bool isValidType(int type) {
+    return type < ALL_CONSUMER && type >= OPERATOR_SEMANTIC;
+  }
 };
 
 #endif
